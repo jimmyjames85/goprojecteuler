@@ -14,6 +14,8 @@ import (
 
 func Run() {
 
+	ceiling := 1000 // 10
+
 	multiples := make(map[int]struct{})
 	ch3 := make(chan int)
 	ch5 := make(chan int)
@@ -28,13 +30,13 @@ func Run() {
 		select {
 
 		case m := <-ch3:
-			if m < 1000 {
+			if m < ceiling {
 				multiples[m] = struct{}{}
 			} else {
 				complete3 = true
 			}
 		case m := <-ch5:
-			if m < 1000 {
+			if m < ceiling {
 				multiples[m] = struct{}{}
 			} else {
 				complete5 = true
