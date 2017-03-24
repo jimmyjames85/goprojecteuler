@@ -1,10 +1,6 @@
 package prob1
 
-import (
-	"fmt"
-
-	"github.com/jimmyjames85/goprojecteuler/util"
-)
+import "fmt"
 
 // https://projecteuler.net/problem=1
 //
@@ -20,8 +16,8 @@ func Run() {
 	ch3 := make(chan int)
 	ch5 := make(chan int)
 
-	go util.GenerateMultiplesOf(3, ch3)
-	go util.GenerateMultiplesOf(5, ch5)
+	go generateMultiplesOf(3, ch3)
+	go generateMultiplesOf(5, ch5)
 
 	complete3 := false
 	complete5 := false
@@ -59,4 +55,13 @@ func Run() {
 	//for _, i := range sortme {
 	//	fmt.Printf("%d\n", i)
 	//}
+}
+
+func generateMultiplesOf(m int, ch chan<- int) {
+	if m <= 0 {
+		panic("expected m > 0")
+	}
+	for i := 1; ; i++ {
+		ch <- m * i
+	}
 }

@@ -1,10 +1,6 @@
 package prob2
 
-import (
-	"fmt"
-
-	"github.com/jimmyjames85/goprojecteuler/util"
-)
+import "fmt"
 
 // https://projecteuler.net/problem=2
 //
@@ -19,7 +15,7 @@ import (
 func Run() {
 
 	ch := make(chan int)
-	go util.GenerateFib(ch)
+	go generateFib(ch)
 
 	sum := 0
 	for fib := <-ch; fib <= 4000000; fib = <-ch {
@@ -29,4 +25,15 @@ func Run() {
 		}
 	}
 	fmt.Printf("sum = %d\n", sum)
+}
+
+func generateFib(ch chan<- int) {
+	f1 := 1
+	f2 := 1
+	for {
+		ch <- f1
+		f3 := f1 + f2
+		f1 = f2
+		f2 = f3
+	}
 }
