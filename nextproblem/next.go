@@ -54,7 +54,7 @@ func main() {
 	f, err := os.Create(fileName)
 	mustBeNil(err)
 
-	_, err = f.Write([]byte(generateGoFileContent(dirName, problemURL, title, problemText)))
+	_, err = f.Write([]byte(generateGoFileContent(problemURL, title, problemText)))
 	mustBeNil(err)
 
 }
@@ -93,14 +93,14 @@ func extractProblemText(problemPage string) (string, string) {
 	return title, problemText
 }
 
-func generateGoFileContent(pkgName, problemURL, title, problemText string) string {
-	ret := fmt.Sprintf("package %s\n\n// %s\n//\n// %s\n//\n", pkgName, problemURL, title)
+func generateGoFileContent(problemURL, title, problemText string) string {
+	hr := strings.Repeat("-", len(title))
+	ret := fmt.Sprintf("package main\n\n// %s\n//\n// %s\n// %s\n//\n", problemURL, title, hr)
 	lines := strings.Split(problemText, "\n")
 	for _, line := range lines {
 		ret += fmt.Sprintf("// %s\n", line)
 	}
-
-	ret += fmt.Sprintf("\n\nfunc Run() {\n\n\tprintln(`TODO`)\n\n}\n")
+	ret += fmt.Sprintf("\nfunc main() {\n\n\tprintln(`TODO`)\n\n}\n")
 	return ret
 }
 
