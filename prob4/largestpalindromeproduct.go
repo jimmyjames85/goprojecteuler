@@ -99,6 +99,7 @@ func isPalindrome(n int) bool {
 	return true
 }
 
+// todo remove this and see if it's faster
 func abs(n int) int {
 	if n >= 0 {
 		return n
