@@ -62,7 +62,7 @@ func main() {
 05886116467109405077541002256983155200055935729725
 71636269561882670428252483600823257530420752963450`
 
-	greatestProduct := product{}
+	greatest := product{}
 
 	seq := strToSeq(seqStr)
 	wg := sync.WaitGroup{}
@@ -79,19 +79,19 @@ func main() {
 				product *= seq[start+offset]
 
 				if product == 0 {
-					// no sense in continuing
+					// 0 times anything is 0...
 					return
 				}
 			}
 
 			// check if we are the greatest
-			greatestProduct.Lock()
-			if product > greatestProduct.product {
+			greatest.Lock()
+			if product > greatest.product {
 				// update
-				greatestProduct.product = product
-				greatestProduct.multipliers = multipliers
+				greatest.product = product
+				greatest.multipliers = multipliers
 			}
-			greatestProduct.Unlock()
+			greatest.Unlock()
 
 		}(i)
 	}
@@ -99,7 +99,7 @@ func main() {
 
 	fmt.Printf("The %d adjacent digits in the 1000-digit number that have the greatest product is \n\n\t", seriesLength)
 
-	for i, m := range greatestProduct.multipliers {
+	for i, m := range greatest.multipliers {
 		if i == 0 {
 			fmt.Printf("%d ", m)
 		} else {
@@ -107,7 +107,7 @@ func main() {
 		}
 	}
 
-	fmt.Printf("= %d\n", greatestProduct.product)
+	fmt.Printf("= %d\n", greatest.product)
 }
 
 // product is a way to keep track of the product of subsets from the sequence.
