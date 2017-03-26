@@ -14,7 +14,10 @@ import (
 	"github.com/jimmyjames85/eflag"
 )
 
-const ProjectEulerProblemSite = "https://projecteuler.net/problem=%d"
+const (
+	ProjectEulerProblemSite = "https://projecteuler.net/problem=%d"
+	FolderPrefix            = "prob_"
+)
 
 type settings struct {
 	ProblemNum int `flag:"p,problem" desc:"which problem to download"`
@@ -39,7 +42,7 @@ func main() {
 	wd, err := os.Getwd()
 	mustBeNil(err)
 
-	dirName := fmt.Sprintf("prob%d", s.ProblemNum)
+	dirName := fmt.Sprintf("%s%04d", FolderPrefix, s.ProblemNum)
 	dirPath := filepath.Join(wd, dirName)
 	os.Mkdir(dirPath, 0766)
 	mustBeNil(os.Chdir(dirPath))
