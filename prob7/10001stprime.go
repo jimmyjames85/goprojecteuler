@@ -17,12 +17,12 @@ import (
 
 func main() {
 
-	n := 10001
-	ch := make(chan int)
-	go util.GeneratePrime(ch)
+	n := uint(10001)
+	ch := make(chan uint)
+	go util.GeneratePrimes(ch)
 
-	var p int
-	for i := 0; i < n; i++ {
+	var p uint
+	for i := uint(0); i < n; i++ {
 		fmt.Printf("\r %d %%", 100*i/n)
 		p = <-ch
 	}

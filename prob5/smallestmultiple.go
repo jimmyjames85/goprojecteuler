@@ -17,13 +17,13 @@ import (
 
 func main() {
 
-	maxDivisor := 20
+	maxDivisor := uint(20)
 
 	// keys are primes, values are exponents
-	factors := make(map[int]int)
+	factors := make(map[uint]uint)
 
 	// prime decomposition of all number from 1 to max
-	for d := 2; d <= maxDivisor; d++ {
+	for d := uint(2); d <= maxDivisor; d++ {
 
 		f := decompose(d)
 		// p-prime e-exponent
@@ -34,9 +34,9 @@ func main() {
 	}
 
 	// calculate the final product
-	product := 1
+	product := uint(1)
 	for p, e := range factors {
-		for i := 0; i < e; i++ {
+		for i := uint(0); i < e; i++ {
 			product *= p
 		}
 	}
@@ -44,10 +44,10 @@ func main() {
 }
 
 // decompose returns a map where the keys(p) are primes and values(e) are exponents such that the sum of all p^e = n
-func decompose(n int) map[int]int {
-	ret := make(map[int]int)
-	ch := make(chan int)
-	go util.GeneratePrime(ch)
+func decompose(n uint) map[uint]uint {
+	ret := make(map[uint]uint)
+	ch := make(chan uint)
+	go util.GeneratePrimes(ch)
 
 	p := <-ch
 	for n != 1 {
@@ -61,7 +61,7 @@ func decompose(n int) map[int]int {
 	return ret
 }
 
-func max(a, b int) int {
+func max(a, b uint) uint {
 	if a > b {
 		return a
 	}

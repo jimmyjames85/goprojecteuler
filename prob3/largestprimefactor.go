@@ -17,10 +17,10 @@ import (
 
 func main() {
 
-	ch := make(chan int)
-	go util.GeneratePrime(ch)
+	ch := make(chan uint)
+	go util.GeneratePrimes(ch)
 
-	num := 600851475143 //120069858
+	num := uint(600851475143) //120069858
 
 	q := num
 	p := <-ch
