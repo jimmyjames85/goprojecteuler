@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 // https://projecteuler.net/problem=6
 //
 // Sum square difference
@@ -18,7 +20,15 @@ package main
 // Find the difference between the sum of the squares of the first one hundred natural numbers and the square of the sum.
 
 func main() {
+	n := 100
+	d := squareOfSum(n) - sumOfSquares(n)
+	fmt.Printf("The difference between the sum of the squares of the first %d natural numbers and the square of the sum is %d\n", n, d)
+}
 
-	println(`TODO`)
+func sumOfSquares(n int) int {
+	return n*(2*n+1)*(n+1)/6
+}
 
+func squareOfSum(n int) int {
+	return n*(n+1)*n*(n+1)/4
 }
