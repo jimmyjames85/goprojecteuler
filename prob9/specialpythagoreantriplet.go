@@ -1,9 +1,6 @@
 package main
 
-import (
-	"fmt"
-	"math"
-)
+import "fmt"
 
 // https://projecteuler.net/problem=9
 //
@@ -12,131 +9,82 @@ import (
 //
 // A Pythagorean triplet is a set of three natural numbers, a < b < c , for which,
 //
-// a^2 + b^2 = c^2
+// a² + b² = c²
 //
-// For example, 3^2 + 4^2 = 9 + 16 = 25 = 5^2 .
+// For example, 3² + 4² = 9 + 16 = 25 = 5² .
 //
 // There exists exactly one Pythagorean triplet for which a + b + c = 1000.
 // Find the product abc .
 
 func main() {
-
-	c := make(chan pair)
-
-	for r := 2; r <=20 ; r++{
-		
-	}
-
-	go generateFactorPairs(c, 64)
-	for p, ok :=<-c; ok; p, ok = <-c{
-		fmt.Printf("%v\n", p)
-	}
-	return
-
-	ch := make(chan trip)
+	ch := make(chan triplet)
 	go generatePythagoreanTriplets(ch)
 
-	for i := 0; i < 10; i++ {
-		t := <-ch
-		fmt.Printf("%d %d %d\n", t.a, t.b, t.c)
+	var t triplet
+	for t = <-ch; t.a+t.b+t.c != 1000; t = <-ch {
 	}
+	fmt.Printf("%d² + %d² = %d²\n\n", t.a, t.b, t.c)
+	fmt.Printf("%d + %d + %d = 1000\n", t.a, t.b, t.c)
+	fmt.Printf("%d * %d * %d = %d\n", t.a, t.b, t.c, (t.a * t.b * t.c))
 }
 
-func generatePythagoreanTriplets(ch chan<- trip) {
+func generatePythagoreanTriplets(ch chan<- triplet) {
 
-	// todo this generate 1,1  1,2 2,2 ... but skips 1,7
-	a := 1
-	b := 1
+	// Dickson's method
+	// https://en.wikipedia.org/wiki/Formulas_for_generating_Pythagorean_triples
+	//
+	// 1: Let r be any even natural number
+	// 2: For every factor-pair (s,t) such that st = r²/2, let
+	//
+	// 	x = r + s
+	// 	y = r + t
+	// 	z = r + s + t
+	//
+	// 3: Then (x,y,z) is a Pythagorean Triple, since:
+	//
+	// 	     x²       +        y²       =
+	// 	  (r + s)²    +     (r + t)²	=
+	// 	r² + 2rs + s² +  r² + 2rt + t²	=
+	// 	r² + 2rs + s² + 2st + 2rt + t²	=	(From step 2)
+	// 		 (r + s + t)²		= z²
 
-	increaseA := false
-
-	for {
-		cSquared := a*a + b*b
-		if c, ok := naturalSqrt(cSquared); ok {
-			ch <- trip{
-				a: a,
-				b: b,
-				c: c,
-			}
+	for r := uint(2); ; r += 2 {
+		st := uint(r * r / 2)
+		chP := make(chan factorPair)
+		go generateFactorPairs(chP, st)
+		for p, ok := <-chP; ok; p, ok = <-chP {
+			ch <- triplet{a: r + p.s, b: r + p.t, c: r + p.s + p.t}
 		}
-
-		if increaseA {
-			a++
-		} else {
-			b++
-		}
-		increaseA = !increaseA
 	}
-
 }
 
-// todo ensure a<b<c
-type trip struct {
-	a int
-	b int
-	c int
-}
+func generateFactorPairs(ch chan<- factorPair, n uint) {
 
-func isPythagoreanTriple(a, b int) bool {
-	if b < a {
-		a, b = b, a
+	defer close(ch)
+	if n <= 1 {
+		ch <- factorPair{n, n}
 	}
-	return false
-}
-
-func newPair(a, b int)  pair {
-	if b < a {
-		a, b = b, a
-	}
-	return pair{a: a, b: b}
-}
-
-type pair struct {
-	a int
-	b int
-}
-
-func (p pair) String() string{
-	return fmt.Sprintf("(%d,%d)", p.a, p.b)
-}
-
-func generateFactorPairs(ch chan<- pair, n int) {
 
 	seen := make(map[string]struct{})
-
-	if n <= 0 {
-		panic("expecting positive n")
-	} else if n == 1 {
-		ch <- pair{a: 1, b: 1}
-		return
-	}
-
-	for i := 2; i <= n; i++ {
+	for i := uint(2); i <= n; i++ {
 		if n%i == 0 {
-			p := newPair(i, (n / i))
-			if _, ok := seen[p.String()] ; !ok{
-				seen[p.String()] = struct{}{}
+			p := factorPair{(n / i), i}
+			hash := fmt.Sprintf("(%d,%d)", p.s, p.t)
+			if _, ok := seen[hash]; !ok {
+				seen[hash] = struct{}{}
 				ch <- p
 			}
 		}
 	}
-
-	close(ch)
 }
 
-// todo not sure this working properly...
-func naturalSqrt(n int) (int, bool) {
-	r := math.Sqrt(float64(n))
+type factorPair struct {
+	s uint
+	t uint
+}
 
-	if r != float64(int(r)) {
-		return 0, false
-	}
-
-	//if r*r == float64(n){
-	//	fmt.Printf("\tr = %f   r2 = %f     n = %d \n", r, r*r, n)
-	//
-	//}
-
-	return int(r), float64(n) == r*r
-
+type triplet struct {
+	a uint
+	b uint
+	c uint
 }
