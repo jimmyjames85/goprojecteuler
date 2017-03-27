@@ -47,86 +47,121 @@ func main() {
 	grid := makeGrid()
 
 	largestProduct := math.MinInt64
-	var largestProductLine []point
-
+	var largestPath Path
 	mux := sync.Mutex{}
 
 	wg := sync.WaitGroup{}
 	for x := 0; x < 20; x++ {
 		for y := 0; y < 20; y++ {
 			wg.Add(1)
-			go func(p point) {
+			go func(p Point) {
 				defer wg.Done()
-				line, err := findLargestProductLine(p, grid, adjacentLength)
+				path, err := grid.findLargestProductPath(p, adjacentLength)
 				if err == nil {
-					if product, err := calculateProduct(grid, line); err == nil {
-						fmt.Printf("%v = %09d\n", line, product)
+					if product, err := grid.calculateProductOf(path); err == nil {
 						mux.Lock()
 						if product > largestProduct {
-							largestProduct, largestProductLine = product, line
+							largestProduct, largestPath = product, path
 						}
 						mux.Unlock()
 					}
 				}
-			}(point{x, y})
+			}(Point{x, y})
 		}
 	}
 	wg.Wait()
-	fmt.Printf("\n\n%v   =   %d\n", largestProductLine, largestProduct)
 
+	if len(largestPath) <= 0 {
+		fmt.Printf("failed to find any products of length %d from the grid.\n", adjacentLength)
+		return
+	}
+
+	fmt.Printf("\nStarting at %v the greatest product of %d numbers is: ", largestPath[0], adjacentLength)
+	for i, p := range largestPath {
+		if i > 0 {
+			fmt.Printf(" * %d", grid[p])
+		} else {
+			fmt.Printf("%d", grid[p])
+		}
+	}
+	fmt.Printf(" = %d\n", largestProduct)
 }
 
-// finds only South, East, and SouthEast products
-func findLargestProductLine(orig point, g grid, lineLength uint) ([]point, error) {
+// finds only South, East, and SouthEast paths' products
+func (g Grid) findLargestProductPath(origin Point, pathLength uint) (Path, error) {
 
-	ret := make([]point, lineLength)
-	_, ok := g[orig]
+	ret := make(Path, pathLength)
+	_, ok := g[origin]
 	if !ok {
 		return ret, fmt.Errorf("origin out of bounds")
 	}
 
 	largestProduct := math.MinInt64
-	var largestProductLine []point
+	var largestProductPath Path
 
-	//todo make a forloop for these
-	hLine := orig.Line(lineLength, point{1, 0})
-	vLine := orig.Line(lineLength, point{0, 1})
-	dLine := orig.Line(lineLength, point{1, 1})
+	hPath := origin.CreatePath(pathLength, Point{1, 0})
+	vPath := origin.CreatePath(pathLength, Point{0, 1})
+	dPath := origin.CreatePath(pathLength, Point{1, 1})
 
-	if hProduct, err := calculateProduct(g, hLine); err == nil {
-		if hProduct > largestProduct {
-			largestProductLine, largestProduct = hLine, hProduct
+	valid := false
+	for _, path := range [3]Path{hPath, vPath, dPath} {
+		if product, err := g.calculateProductOf(path); err == nil {
+			valid = true
+			if product > largestProduct {
+				largestProductPath, largestProduct = path, product
+			}
 		}
 	}
-	if vProduct, err := calculateProduct(g, vLine); err == nil {
-		if vProduct > largestProduct {
-			largestProductLine, largestProduct = vLine, vProduct
-		}
+
+	if !valid {
+		return ret, fmt.Errorf("no valid paths from origin: %v", origin)
 	}
-	if dProduct, err := calculateProduct(g, dLine); err == nil {
-		if dProduct > largestProduct {
-			largestProductLine, largestProduct = dLine, dProduct
-		}
-	}
-	return largestProductLine, nil
+	return largestProductPath, nil
 }
 
-func calculateProduct(g grid, points []point) (int, error) {
-	if len(points)==0 {
+func (g Grid) calculateProductOf(path Path) (int, error) {
+	if len(path) == 0 {
 		return 0, fmt.Errorf("no points specified")
 	}
 	product := 1
-	for _, p := range points {
-		if val, ok := g[p]; ok {
+	for _, point := range path {
+		if val, ok := g[point]; ok {
 			product *= val
 		} else {
-			return 0, fmt.Errorf("%v out of range", p)
+			return 0, fmt.Errorf("%v out of range", point)
 		}
 	}
 	return product, nil
 }
 
-func makeGrid() grid {
+type Grid map[Point]int
+type Point [2]int
+type Path []Point
+
+func (p *Point) CreatePath(length uint, direction Point) Path {
+
+	//local copy
+	l := Point{p[x], p[y]}
+
+	ret := make(Path, length)
+	for i := range ret {
+		if i != 0 {
+			l[x] += direction[x]
+			l[y] += direction[y]
+		}
+
+		ret[i] = Point{l[x], l[y]}
+	}
+	return ret
+}
+
+// local convenience variables to access a point's x or y value via p[x] and/or p[y]
+const (
+	x = 0
+	y = 1
+)
+
+func makeGrid() Grid {
 
 	gridStr := `
 08 02 22 97 38 15 00 40 00 75 04 05 07 78 52 12 50 77 91 08
@@ -151,9 +186,9 @@ func makeGrid() grid {
 01 70 54 71 83 51 54 69 16 92 33 48 61 43 52 01 89 19 67 48
 `
 	slice := strings.Split(strings.Trim(strings.Replace(gridStr, "\n", " ", -1), " "), " ")
-	grid := grid{}
+	grid := Grid{}
 
-	p := point{0, 0}
+	p := Point{0, 0}
 	for i := range slice {
 		num, err := strconv.Atoi(slice[i])
 		if err != nil {
@@ -170,29 +205,3 @@ func makeGrid() grid {
 
 	return grid
 }
-
-type grid map[point]int
-type point [2]int
-
-func (p *point) Line(length uint, direction point) []point {
-
-	//local copy
-	l := point{p[x], p[y]}
-
-	ret := make([]point, length)
-	for i := range ret {
-		if i != 0 {
-			l[x] += direction[x]
-			l[y] += direction[y]
-		}
-
-		ret[i] = point{l[x], l[y]}
-	}
-	return ret
-}
-
-// local convenience variables to access a point's x or y value via p[x] and p[y]
-const (
-	x = 0
-	y = 1
-)
