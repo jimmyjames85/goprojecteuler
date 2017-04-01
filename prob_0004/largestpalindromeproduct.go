@@ -21,68 +21,63 @@ type product struct {
 
 func main() {
 	findAll := false
-	digits := 3
+	digits := uint(3)
 
 	ch := make(chan (product))
 	go generateProductsOfNDigitNumbers(ch, digits)
 
-	var p product
+	var p, biggestPalindrome product
 	var ok bool
-	for p, ok = <-ch; ok && (findAll || !isPalindrome(p.p)); p, ok = <-ch {
-		if findAll && isPalindrome(p.p) {
-			fmt.Printf("%v\n", p)
+
+	for p, ok = <-ch; ok; p, ok = <-ch {
+
+		if p.isPalindrome() {
+			if findAll {
+				fmt.Printf("%v\n", p)
+			}
+			if p.p > biggestPalindrome.p {
+				biggestPalindrome = p
+			}
 		}
 	}
 
-	if !findAll {
-		if ok && isPalindrome(p.p) {
-			fmt.Printf("The largest palindrome made from the product of two %d-digit numbers is: %d * %d = %d\n", digits, p.a, p.b, p.p)
-		} else {
-			fmt.Printf("Failed to find palindrome.\n")
-		}
+	if biggestPalindrome.p >= 0 {
+		fmt.Printf("The largest palindrome made from the product of two %d-digit numbers is: %s\n", digits, biggestPalindrome)
+	} else {
+		fmt.Printf("Failed to find a palindrome.\n")
 	}
 
 }
 
-// generateProductsOfNDigitNumbers generates 999*999, 999*998, 998*998, 998*997, ... , 100*100
-func generateProductsOfNDigitNumbers(ch chan<- product, digits int) {
-
-	if digits < 0 {
-		close(ch)
-		return
+func generateProductsOfNDigitNumbers(ch chan<- product, digits uint) {
+	start, end := newNDigitRange(digits)
+	for x := start; x >= end; x-- {
+		for y := x; y >= end; y-- {
+			ch <- product{
+				a: x,
+				b: y,
+				p: x * y,
+			}
+		}
 	}
+	close(ch)
+}
 
+func newNDigitRange(digits uint) (int, int) {
 	start := 0
-	for i := 0; i < digits; i++ {
+	for i := uint(0); i < digits; i++ {
 		start = start*10 + 9
 	}
 	end := 1 + (start-9)/10
+	return start, end
+}
 
-	generateDecliningThreeDigitNumbers := func(ch chan<- int) {
-		for n := start; n >= end; n-- {
-			ch <- n
-		}
-		close(ch)
-	}
+func (p product) String() string {
+	return fmt.Sprintf("[ %d * %d = %d ]", p.a, p.b, p.p)
+}
 
-	chA := make(chan (int))
-	chB := make(chan (int))
-	go generateDecliningThreeDigitNumbers(chA)
-	go generateDecliningThreeDigitNumbers(chB)
-
-	readA := true
-	a, aOk := <-chA
-	b, bOk := <-chB
-	for aOk && bOk {
-		ch <- product{a: a, b: b, p: a * b}
-		if readA {
-			a, aOk = <-chA
-		} else {
-			b, bOk = <-chB
-		}
-		readA = !readA
-	}
-	close(ch)
+func (p *product) isPalindrome() bool {
+	return isPalindrome(p.p)
 }
 
 func isPalindrome(n int) bool {
