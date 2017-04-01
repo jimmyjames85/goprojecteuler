@@ -1,6 +1,11 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/jimmyjames85/goprojecteuler/util"
+	"sort"
+)
 
 // https://projecteuler.net/problem=12
 //
@@ -29,11 +34,57 @@ import "fmt"
 // What is the value of the first triangle number to have over five hundred divisors?
 
 func main() {
-	for i := 0; i < 10; i++ {
-		fmt.Printf("%02d: %d\n", i, triangleNum(uint(i)))
+
+	found := false
+
+	for i := uint(10000); !found; i++ {
+		tri := triangleNum(i)
+		primes := primeFactors(tri)
+		if len(primes) > 25 {
+			fmt.Printf("%02d: %d    %v\n", i, tri, primeFactors(tri))
+			found = true
+		}
 	}
 }
 
 func triangleNum(n uint) uint {
 	return n * (n + 1) / 2
+}
+
+func primeFactors(n uint) []uint {
+	ret := make([]uint, 0)
+	if n == 0 {
+		return append(ret, 0)
+	}
+	ret = append(ret, 1) // 1 divide all the things
+
+	ch := make(chan uint)
+	go util.GeneratePrimes(ch)
+	for p := <-ch; n > 1; p = <-ch {
+		for n%p == 0 {
+			ret = append(ret, p)
+			n = n / p
+		}
+	}
+	return ret
+}
+
+func uniqFactors(primeFactors []uint) []uint {
+
+	set := make(map[uint]struct{})
+	for _, i := range primeFactors {
+		set[i] = struct{}{}
+	}
+
+	var ret []uint
+	for i := range set {
+		ret = append(ret, i)
+	}
+	//
+	//pset := 2 2 3 5
+	//
+	//dset = 2 3 5 4 6 10 6 10 15 15
+	//
+
+	return ret
 }

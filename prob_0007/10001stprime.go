@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/jimmyjames85/goprojecteuler/util"
+	"time"
 )
 
 // https://projecteuler.net/problem=7
@@ -16,7 +17,7 @@ import (
 // What is the 10 001st prime number?
 
 func main() {
-
+	start := time.Now()
 	n := uint(10001)
 	ch := make(chan uint)
 	go util.GeneratePrimes(ch)
@@ -27,4 +28,5 @@ func main() {
 		p = <-ch
 	}
 	fmt.Printf("\rThe %d prime is %d\n", n, p)
+	fmt.Printf("%s\n", time.Since(start))
 }
