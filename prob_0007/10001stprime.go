@@ -24,7 +24,6 @@ func main() {
 
 	var p uint
 	for i := uint(0); i < n; i++ {
-		fmt.Printf("\r %d %%", 100*i/n)
 		p = <-ch
 	}
 	fmt.Printf("\rThe %d prime is %d\n", n, p)
